@@ -1,132 +1,126 @@
 
-# 🐳 Jenkins Docker CI Pipeline with AWS ECS
+# 🐳 Docker CI/CD Setup for Jenkins with AWS ECR
 
-This project demonstrates a **CI pipeline using Jenkins**, Docker, and **Amazon ECS (Elastic Container Service)**. It includes building a Java app with Maven, containerizing it, pushing to AWS ECR, and deploying to ECS Fargate.
-
----
-
-## 🎯 Objectives
-
-- Automate build and test using Jenkins
-- Perform code quality analysis via SonarQube
-- Build and publish Docker image to AWS ECR
-- Deploy container to ECS using Fargate
-- Notify via Slack
+This guide outlines all the prerequisites and setup steps needed to configure a Jenkins CI/CD pipeline using Docker and AWS Elastic Container Registry (ECR).
 
 ---
 
-## 🔧 Prerequisites
+## 📦 Prerequisites
 
-- Jenkins installed with:
+### 🔐 AWS
+
+- IAM user with programmatic access
+- ECR registry (Docker registry on AWS)
+
+### 🔧 Jenkins
+
+- Plugins required:
   - Docker
-  - Maven and JDK configured (via Global Tool Configuration)
-  - AWS CLI installed and IAM permissions configured
-  - Installed Plugins:
-    - **Pipeline: AWS Steps**
-    - **Docker Pipeline**
-    - **Slack Notification**
-    - **SonarQube Scanner for Jenkins**
-- AWS ECR repository created
-- ECS Cluster and Task Definition created
-- Slack integration configured in Jenkins
+  - Docker Pipeline
+  - Amazon ECR
+  - AWS SDK for credentials
+
+- Credentials:
+  - Store AWS account access keys as global credentials
 
 ---
 
-## ⚙️ ECS Setup Summary
+## 🔧 Setup Instructions
 
-1. **ECS Cluster** (Fargate-based)
-    - Name: `vprofile-cluster-2`
-    - Monitoring: Enabled (Container Insights)
+### 1. 🐋 Install Docker on Jenkins
 
-2. **Task Definition**
-    - Name: `vprofile-task`
-    - Container: `vproapp`
-    - Image URI: From ECR
-    - Port: 8080
+SSH into your Jenkins host and run:
 
-3. **IAM Role**
-    - Attach: `CloudWatchLogsFullAccess`
+```bash
+# Add Docker repository
+sudo apt-get update
+sudo apt-get install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
 
-4. **ECS Service**
-    - Name: `vprofile-app-svc`
-    - Load Balancer: Application type
-    - Listener: Port 80
-    - Target Group: `vproapp-ecs-TG`
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+```
+
+Then install Docker:
+
+```bash
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo docker run hello-world
+```
+
+Ensure Jenkins user is added to the Docker group:
+
+```bash
+sudo usermod -aG docker jenkins
+sudo reboot
+```
 
 ---
 
-## 🔁 Jenkins Pipeline Overview
+### 2. ☁️ Create IAM User for Jenkins
 
-The `Jenkinsfile` includes the following stages:
+AWS Console → IAM → Users → Create New User
+
+- Name: `jenkins`
+- Permissions:
+  - AmazonEC2ContainerRegistryFullAccess
+  - AmazonECS_FullAccess
+
+Then create access keys under Security Credentials tab.
+
+---
+
+### 3. 🛢️ Create AWS ECR Registry
+
+Go to **Amazon ECR** in the AWS Console:
+
+- Repository name: `vprofileappimg`
+- Visibility: Private
+- Create
+
+---
+
+### 4. 🔌 Install Jenkins Plugins
+
+Go to: **Dashboard → Manage Jenkins → Plugins → Available**
+
+Search and install:
+
+- `Amazon Web Services SDK :: ECR`
+- `Amazon ECR`
+- `Docker Pipeline`
+- `CloudBees Docker Build and Publish`
+
+---
+
+### 5. 🔐 Store AWS Credentials in Jenkins
+
+**Dashboard → Manage Jenkins → Credentials → System → Global Credentials**
+
+- Kind: AWS Credentials
+- ID: `awscreds`
+- Access Key: From IAM user
+- Secret Key: From IAM user
+
+---
+
+## 🧪 Execution Summary
 
 ```text
-1. Fetch code from GitHub
-2. Build the application using Maven
-3. Run unit tests and checkstyle
-4. Analyze code with SonarQube
-5. Enforce Quality Gate
-6. Build Docker image (multi-stage)
-7. Push image to AWS ECR
-8. Deploy to ECS via awscli
-9. Clean up local Docker images
-10. Send Slack Notification
-```
-
----
-
-## 📝 Jenkinsfile Snippet (Highlights)
-
-```groovy
-environment {
-  registryCredential = 'ecr:us-east-1:awscreds'
-  appRegistry = "123132135.dkr.ecr.us-east-1.amazonaws.com/vprofileappimg"
-  cluster = "vprofile-cluster-2"
-  service = "vprofile-app-svc"
-}
-
-stage('Build App Image') {
-  steps {
-    script {
-      dockerImage = docker.build(appRegistry + ":$BUILD_NUMBER", "./Docker-files/app/multistage/")
-    }
-  }
-}
-
-stage('Push Image to ECR') {
-  steps {
-    docker.withRegistry(vprofileRegistry, registryCredential) {
-      dockerImage.push("$BUILD_NUMBER")
-      dockerImage.push('latest')
-    }
-  }
-}
-
-stage('Deploy to ECS') {
-  steps {
-    withAWS(credentials: 'awscreds', region: 'us-east-1') {
-      sh 'aws ecs update-service --cluster ${cluster} --service ${service} --force-new-deployment'
-    }
-  }
-}
-```
-
----
-
-## 🔔 Slack Notifications
-
-Slack is integrated to notify the `#jenkins-ci` channel with build status using:
-
-```groovy
-slackSend channel: '#jenkins-ci',
-  color: COLOR_MAP[currentBuild.currentResult],
-  message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER}"
+1. Install Docker Engine and reboot Jenkins host
+2. Configure IAM user with ECR/ECS access
+3. Create AWS ECR registry
+4. Install Docker and AWS plugins in Jenkins
+5. Add AWS credentials to Jenkins
+6. Start writing Jenkins pipelines to build/push to ECR
 ```
 
 ---
 
 ## 📚 References
 
-- [Amazon ECS Docs](https://docs.aws.amazon.com/ecs/latest/developerguide/)
-- [Jenkins Pipeline Docs](https://www.jenkins.io/doc/book/pipeline/)
-- [AWS CLI ECS Reference](https://docs.aws.amazon.com/cli/latest/reference/ecs/)
-- [Docker Multi-stage Builds](https://docs.docker.com/develop/develop-images/multistage-build/)
+- [Install Docker on Ubuntu](https://docs.docker.com/engine/install/ubuntu/)
+- [AWS ECR Docs](https://docs.aws.amazon.com/AmazonECR/latest/userguide/what-is-ecr.html)
+- [Jenkins Plugin Index](https://plugins.jenkins.io/)
