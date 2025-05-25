@@ -105,13 +105,4 @@ bash myscript.sh        # Run using bash explicitly
 - Use functions for modularity
 - Log output and errors
 
----
-
-## 📎 Next Steps
-
-- Practice writing scripts for:
-  - Package installation
-  - Service status checks
-  - Automating Docker container deployment
-- Learn how to integrate Bash with CI/CD pipelines
 
