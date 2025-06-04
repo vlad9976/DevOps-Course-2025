@@ -8,8 +8,8 @@ This README provides a comprehensive walkthrough of essential Git commands and w
 ## 📁 Initial Configuration
 
 ```bash
-git config --global user.name "vlad9976m"
-git config --global user.email "vlad9976m@gmail.com"
+git config --global user.name "User"
+git config --global user.email "Email"
 ```
 
 ## 🧱 Initialize a Local Git Repository
