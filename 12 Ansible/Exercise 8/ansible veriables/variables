@@ -1,0 +1,43 @@
+VARIABLES
+
+PLAYBOOK
+- hosts: websrvgrp
+  vars:
+    http_port: 80
+    sqluser: admin
+
+-------
+
+Inventory based
+
+In inventory file
+group_vars/all
+group_vars/groupname
+host_vars/hostname
+
+-------
+
+Roles
+
+Include variables from files in playbook
+
+--------
+
+Fact variables: Setup module
+
+ansible_os_family = Os name like RedHat, Debian etc
+
+ansible_processor_cores = Number of CPU cores
+
+ansible_kernel = Kernel version
+
+ansible_devices = Connection Device informay=tion
+
+ansible_default_ipv4 = IP,MAC address, gateway etc
+
+ansible_architecture = 64 bit or 32 bit
+---------
+
+Store Output: register module
+
+Module Execution(Play Tasks) > Return Output(Json format) > Store Output(Variable to store) > Use Variable(In Tasks/Print it)

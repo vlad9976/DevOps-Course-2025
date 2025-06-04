@@ -1,0 +1,18 @@
+---
+- name: DBserver setup
+  hosts: dbservers
+  become: yes
+  tasks:
+  - name: Install maria-DB server
+    ansible.builtin.yum:
+      name: mariadb-server
+      state: present
+  - name: Start mariadb service
+    ansible.builtin.service:
+      name: mariadb
+      state: started
+      enabled: yes
+  - name: Create a new database with name 'accounts
+    mysql_db:
+      name: accounts
+      state: present

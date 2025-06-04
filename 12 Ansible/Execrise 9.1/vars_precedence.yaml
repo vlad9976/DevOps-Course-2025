@@ -1,0 +1,25 @@
+---
+- name: Understand vars
+  hosts: all
+  become: yes
+  # vars: 
+  #   USRNM: playuser
+  #   COMM: Variable from PlayBook
+  tasks:
+    - name: Create user
+      ansible.builtin.user:
+        name: "{{USRNM}}"
+        comment: "{{COMM}}"
+        # register to print output
+      register: usrout
+      # debug to actually print the output. XD
+    - debug:
+        var: usrout.name
+    - debug:
+        var: usrout.comment
+    - debug:
+        var: usrout.home
+    - debug:
+        var: usrout.shell
+    - debug:
+        var: usrout.uid
