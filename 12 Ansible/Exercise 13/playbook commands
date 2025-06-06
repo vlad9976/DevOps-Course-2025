@@ -1,0 +1,20 @@
+# Login to centOS cat chrony.conf file
+
+cat /etc/chrony.conf 
+
+copy all the chrony.conf content from the file to our control machine
+
+Create "templates" folder and "ntpconf_centos" file
+
+past the content inside the file and make changes
+
+
+# Login to ubuntu 
+
+cat /etc/ntpsec/ntp.conf 
+
+copy all the ntp.conf  content from the file to our control machine
+
+Crerate file "ntpconf_ubuntu" file in templates directory
+
+past the content inside the file and make changes

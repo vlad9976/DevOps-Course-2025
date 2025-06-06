@@ -1,0 +1,22 @@
+---
+- name: Loop and Create users
+  hosts: all
+  become: yes
+  tasks:
+    - name: Create the group developer_test
+      ansible.builtin.group:
+        name: developer_test
+        state: present
+
+    - name: Create user
+      ansible.builtin.user:
+        name: "{{item.name}}"
+        state: present
+        groups: "{{item.groups}}"
+      loop:
+        - { name: "test1", groups: "developer_test"}
+        - { name: "test2", groups: "developer_test"}
+        - { name: "test3", groups: "developer_test"}
+        - { name: "test4", groups: "developer_test"}
+
+# Will loop the dictionery access values "{{item.KEY}}" will return value

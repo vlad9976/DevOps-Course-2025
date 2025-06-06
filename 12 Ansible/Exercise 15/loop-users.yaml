@@ -1,0 +1,16 @@
+---
+- name: Loop and Create users
+  hosts: all
+  become: yes
+  tasks:
+    - name: Create user
+      ansible.builtin.user:
+        name: "{{item}}"
+        state: present
+      loop:
+        - test1
+        - test2
+        - test3
+        - test4
+
+

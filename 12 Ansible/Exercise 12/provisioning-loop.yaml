@@ -1,0 +1,58 @@
+---
+- name: Provisioning Servers
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install NTP agent on CentOS
+      yum:
+        name: "{{item}}" #-----------------------ITEM
+        state: present
+      when: ansible_distribution == "CentOS"
+      loop: # the loop has builtin variable item
+        - chrony # The value from this list willl be taken each iteration
+        - wget 
+        - git
+        - zip
+        - unzip
+        - httpd
+        
+    - name: Install NTP agent on Ubuntu
+      apt:
+        name: "{{item}}"
+        state: present
+        update_cache: yes
+      when: ansible_distribution == "Ubuntu"
+      loop: # the loop has builtin variable item
+        - ntp # The value from this list willl be taken each iteration
+        - wget 
+        - git
+        - zip
+        - unzip
+        - nginx
+
+    - name: Start Service on CentOS
+      service:
+        name: "{{item}}"
+        state: started
+        enabled: yes
+      when: ansible_distribution == "CentOS"
+      loop: # the loop has builtin variable item
+        - chronyd # The value from this list willl be taken each iteration
+        - httpd   
+
+
+    - name: Start Service on Ubuntu
+      service:
+        name: "{{item}}"
+        state: started
+        enabled: yes
+      when: ansible_distribution == "Ubuntu"
+      loop:
+        - ntp
+        - nginx
+
+      
+    - name: Banner file
+      copy:
+        content: '# This server is managed by Ansible No manual changes please'
+        dest: /etc/motd

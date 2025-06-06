@@ -1,0 +1,80 @@
+---
+- name: Provisioning Servers
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install NTP agent on CentOS
+      yum:
+        name: "{{item}}" #-----------------------ITEM
+        state: present
+      when: ansible_distribution == "CentOS"
+      loop: # the loop has builtin variable item
+        - chrony # The value from this list willl be taken each iteration
+        - wget 
+        - git
+        - zip
+        - unzip
+        - httpd
+        
+    - name: Install NTP agent on Ubuntu
+      apt:
+        name: "{{item}}"
+        state: present
+        update_cache: yes
+      when: ansible_distribution == "Ubuntu"
+      loop: # the loop has builtin variable item
+        - ntp # The value from this list willl be taken each iteration
+        - wget 
+        - git
+        - zip
+        - unzip
+        - nginx
+
+    - name: Start Service on CentOS
+      service:
+        name: chronyd
+        state: started
+        enabled: yes
+      when: ansible_distribution == "CentOS"
+
+    - name: Start Service on Ubuntu
+      service:
+        name: ntp
+        state: started
+        enabled: yes
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Banner file
+      copy:
+        content: '# This server is managed by Ansible No manual changes please'
+        dest: /etc/motd
+
+# NTP configuration changes
+
+    - name: Deploy ntp agent conf on CentOS
+      template:
+        src: templates/ntpconf_centos
+        dest: /etc/crony.conf
+        backup: yes
+      when: ansible_distribution == "CentOS"
+
+    - name: Deploy ntp agent conf on ubuntu
+      template:
+        src: templates/ntpconf_ubuntu
+        dest: /etc/ntpsec/ntp.conf
+        backup: yes
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Restart Service on CentOS
+      service:
+        name: chronyd
+        state: restarted
+        enabled: yes
+      when: ansible_distribution == "CentOS"
+      
+    - name: Restart Service on Ubuntu
+      service:
+        name: ntp
+        state: restarted
+        enabled: yes
+      when: ansible_distribution == "Ubuntu"

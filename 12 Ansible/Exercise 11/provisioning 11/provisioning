@@ -1,0 +1,7 @@
+1. NTP server on multi OS
+2. Users & group_vars3. Configuration files
+4. Decision making
+5. Loops
+6. Template
+7. Handlers
+8. Ansible roles
